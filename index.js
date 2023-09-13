@@ -1,7 +1,15 @@
 const express = require("express");
+
+const morgan = require("morgan");
+
+morgan.token("body", function (req, res) {
+  return JSON.stringify(req.body);
+});
+
 const app = express();
 
 app.use(express.json());
+app.use(morgan("tiny :body"));
 
 let persons = [
   {
@@ -60,7 +68,6 @@ app.delete("/api/persons/:id", (request, response) => {
 app.post("/api/persons", (request, response) => {
   const person = request.body;
   person.id = Math.random() * 1000;
-  persons = persons.concat(person);
 
   if (!person.name) {
     return response.status(400).json({
@@ -82,9 +89,10 @@ app.post("/api/persons", (request, response) => {
     return response.status(400).json({
       error: "Name is already exists",
     });
+  } else {
+    persons = persons.concat(person);
+    response.json(person);
   }
-
-  response.json(person);
 });
 
 const PORT = 3001;
