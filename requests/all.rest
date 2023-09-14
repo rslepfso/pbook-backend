@@ -8,4 +8,14 @@ Content-Type: application/json
 
 ###
 
-DELETE http://localhost:3001/api/persons/test
+DELETE http://localhost:3001/api/persons/6502ec2598707b85b884bb3a
+
+###
+
+PUT http://localhost:3001/api/persons/6502ec2598707b85b884bb3a
+Content-Type: application/json
+
+{
+  "name": "John Smith",
+  "number": "911"
+}

@@ -14,8 +14,19 @@ mongoose
   .catch((error) => console.log("Connection failed", error));
 
 const personSchema = new mongoose.Schema({
-  name: String,
-  number: String,
+  name: {
+    type: String,
+    minLength: 3,
+  },
+  number: {
+    type: String,
+    validate: {
+      validator: function (v) {
+        return /\d{3}-\d{8}/.test(v);
+      },
+      message: (props) => `${props.value} is not a valid phone number!`,
+    },
+  },
 });
 
 personSchema.set("toJSON", {

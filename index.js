@@ -78,7 +78,7 @@ app.delete("/api/persons/:id", (request, response, next) => {
 });
 
 // Create new
-app.post("/api/persons", (request, response) => {
+app.post("/api/persons", (request, response, next) => {
   const body = request.body;
 
   if (!body.name) {
@@ -98,22 +98,14 @@ app.post("/api/persons", (request, response) => {
     number: body.number,
   });
 
-  person.save().then((result) => {
-    response.json(result);
-  });
-
-  // const duplicates = persons.filter(
-  //   (p) => p.name.toLowerCase() === body.name.toLowerCase()
-  // );
-
-  // if (duplicates.length > 0) {
-  //   return response.status(400).json({
-  //     error: "Name is already exists",
-  //   });
-  // } else {
-  //   persons = persons.concat(body);
-  //   response.json(body);
-  // }
+  person
+    .save()
+    .then((result) => {
+      response.json(result);
+    })
+    .catch((error) => {
+      next(error);
+    });
 });
 
 // Update person
@@ -125,7 +117,10 @@ app.put("/api/persons/:id", (request, response, next) => {
     number: body.number,
   };
 
-  Person.findByIdAndUpdate(request.params.id, person, { new: true })
+  Person.findByIdAndUpdate(request.params.id, person, {
+    runValidators: true,
+    context: "query",
+  })
     .then((result) => response.json(result))
     .catch((error) => next(error));
 });
@@ -133,6 +128,8 @@ app.put("/api/persons/:id", (request, response, next) => {
 const errorHandler = (error, request, response, next) => {
   if (error.name === "CastError") {
     return response.status(400).send({ error: "Malformatted ID" });
+  } else if (error.name === "ValidationError") {
+    return response.status(400).json({ error: error.message });
   }
 
   next(error);
