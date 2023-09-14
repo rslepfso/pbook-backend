@@ -49,27 +49,32 @@ app.get("/api/persons", (request, response) => {
   Person.find({}).then((result) => response.json(result));
 });
 
+// Get info
 app.get("/info", (request, response) => {
-  response.send(`
-  <p>Phonebook has info for ${persons.length} people<p>
+  Person.find({}).then((result) => {
+    response.send(`
+  <p>Phonebook has info for ${result.length} people<p>
   <p>Current time is ${new Date().toLocaleString()}
   `);
+  });
 });
 
-app.get("/api/persons/:id", (request, response) => {
-  const id = +request.params.id;
-  const person = persons.find((p) => p.id === id);
-  if (person) {
-    response.json(person);
-  } else {
-    response.status(404).end();
-  }
+// Get single person
+app.get("/api/persons/:id", (request, response, next) => {
+  Person.findById(request.params.id)
+    .then((result) => {
+      response.json(result);
+    })
+    .catch((error) => next(error));
 });
 
-app.delete("/api/persons/:id", (request, response) => {
-  const id = +request.params.id;
-  persons = persons.filter((p) => p.id !== id);
-  response.status(204).end();
+// Delete person
+app.delete("/api/persons/:id", (request, response, next) => {
+  Person.findByIdAndRemove(request.params.id)
+    .then((result) => {
+      response.status(204).end();
+    })
+    .catch((error) => next(error));
 });
 
 // Create new
@@ -110,6 +115,30 @@ app.post("/api/persons", (request, response) => {
   //   response.json(body);
   // }
 });
+
+// Update person
+app.put("/api/persons/:id", (request, response, next) => {
+  const body = request.body;
+
+  const person = {
+    name: body.name,
+    number: body.number,
+  };
+
+  Person.findByIdAndUpdate(request.params.id, person, { new: true })
+    .then((result) => response.json(result))
+    .catch((error) => next(error));
+});
+
+const errorHandler = (error, request, response, next) => {
+  if (error.name === "CastError") {
+    return response.status(400).send({ error: "Malformatted ID" });
+  }
+
+  next(error);
+};
+
+app.use(errorHandler);
 
 const PORT = 3001;
 app.listen(PORT, () => {

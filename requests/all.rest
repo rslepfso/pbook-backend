@@ -5,3 +5,7 @@ Content-Type: application/json
   "name": "John Smith",
   "number": "911"
 }
+
+###
+
+DELETE http://localhost:3001/api/persons/test
