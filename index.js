@@ -1,5 +1,7 @@
+require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
+const Person = require("./modules/person");
 
 const morgan = require("morgan");
 
@@ -37,12 +39,14 @@ let persons = [
   },
 ];
 
+// ROUTE HANDLERS
 app.get("/", (request, response) => {
   response.send("<h1>Home Page</h1>");
 });
 
+// Get all
 app.get("/api/persons", (request, response) => {
-  response.json(persons);
+  Person.find({}).then((result) => response.json(result));
 });
 
 app.get("/info", (request, response) => {
@@ -68,34 +72,43 @@ app.delete("/api/persons/:id", (request, response) => {
   response.status(204).end();
 });
 
+// Create new
 app.post("/api/persons", (request, response) => {
-  const person = request.body;
-  person.id = Math.random() * 1000;
+  const body = request.body;
 
-  if (!person.name) {
+  if (!body.name) {
     return response.status(400).json({
       error: "Name is missing",
     });
   }
 
-  if (!person.number) {
+  if (!body.number) {
     return response.status(400).json({
       error: "Number is missing",
     });
   }
 
-  const duplicates = persons.filter(
-    (p) => p.name.toLowerCase() === person.name.toLowerCase()
-  );
+  const person = new Person({
+    name: body.name,
+    number: body.number,
+  });
 
-  if (duplicates.length > 0) {
-    return response.status(400).json({
-      error: "Name is already exists",
-    });
-  } else {
-    persons = persons.concat(person);
-    response.json(person);
-  }
+  person.save().then((result) => {
+    response.json(result);
+  });
+
+  // const duplicates = persons.filter(
+  //   (p) => p.name.toLowerCase() === body.name.toLowerCase()
+  // );
+
+  // if (duplicates.length > 0) {
+  //   return response.status(400).json({
+  //     error: "Name is already exists",
+  //   });
+  // } else {
+  //   persons = persons.concat(body);
+  //   response.json(body);
+  // }
 });
 
 const PORT = 3001;
